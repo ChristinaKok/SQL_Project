@@ -2,4 +2,4 @@
 
 * 1η άσκηση: EER_Diagram
 * 2η άσκηση: SQL_queries
-* 3η άσκηση:
+* 3η άσκηση: app.py
