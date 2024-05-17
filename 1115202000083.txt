@@ -1,0 +1,89 @@
+#1
+select a.number 
+from airplanes a , airlines l ,airlines_has_airplanes al
+where a.manufacturer = 'Airbus' AND al.airlines_id = l.id AND al.airplanes_id = a.id AND l.name = 'Lufthansa'
+
+#2 
+select l.name
+from airlines l , routes r , airports s , airports d 
+where l.id = r.airlines_id AND s.id = r.source_id AND d.id = r.destination_id AND s.city = 'Athens' AND d.city = 'Prague'
+
+#3 
+select COUNT(DISTINCT p.id)
+from passengers p , airlines l , flights f , flights_has_passengers fp 
+where fp.flights_id = f.id AND fp.passengers_id = p.id AND f.date = '2012-02-19' AND l.name = 'Aegean Airlines'
+
+#4 
+select 'Yes' as Answer 
+where exists
+(select f.id
+from airlines l , flights f , routes r , airports s , airports d
+where f.routes_id = r.id AND r.airlines_id = l.id AND r.destination_id = d.id AND r.source_id = s.id AND l.name = 'Olympic Airways' AND f.date = '2014-12-12'
+)
+union
+select 'No' as Answer 
+where not exists
+(select f.id
+from airlines l , flights f , routes r , airports s , airports d
+where f.routes_id = r.id AND r.airlines_id = l.id AND r.destination_id = d.id AND r.source_id = s.id AND l.name = 'Olympic Airways' AND f.date = '2014-12-12'
+)
+
+#5
+select avg(2022 - p.year_of_birth)
+from passengers p, flights f,routes r , flights_has_passengers fp, airports a
+where fp.flights_id = f.id AND fp.passengers_id = p.id AND f.routes_id = r.id AND r.destination_id = a.id AND a.city = 'Berlin'
+
+#6 
+select p.name , p.surname
+from passengers p, flights f , flights_has_passengers fp, airplanes a
+where p.id = fp.passengers_id AND f.id = fp.flights_id AND f.airplanes_id = a.id 
+group by p.id
+having count(distinct f.airplanes_id)=1
+
+#7 
+select s.city,d.city
+from passengers p , flights f, flights_has_passengers fp , routes r , airports d, airports s
+where p.id = fp.passengers_id AND f.id = fp.flights_id AND f.routes_id = r.id AND r.destination_id = d.id AND r.source_id = s.id and DATE between '2010-03-01' and '2014-07-17' 
+group by f.id
+having count(*) > 5
+
+#8
+select l.name ,l.code ,count(routes.id) as 'num'
+from routes , airlines l 
+where routes.airlines_id = l.id 
+group by airlines_id
+having l.code in 
+(
+select l.code 
+from airlines l ,airplanes a ,airlines_has_airplanes la
+where l.id = la.airlines_id AND a.id = la.airplanes_id 
+group by airlines_id
+having count(airplanes_id) = 4
+)
+
+#9
+select p.name , p.surname 
+from passengers p
+where not exists
+(select *
+from airlines l
+where l.active = 'Y' AND not exists 
+(select *
+from routes r , flights f , flights_has_passengers fp
+where fp.flights_id = f.id AND fp.passengers_id = p.id AND f.routes_id = r.id AND r.airlines_id = l.id
+))
+
+#10 
+(select p.name , p.surname , l.name as 'Extra'
+from passengers p, flights f, flights_has_passengers fp , routes r , airlines l
+where p.id = fp.passengers_id AND f.id = fp.flights_id AND f.routes_id = r.id AND r.airlines_id = l.id
+group by p.id
+having l.name = 'Aegean Airlines' and count(l.name) = 1)
+
+union
+
+(select  p.name , p.surname , p.id
+from passengers p,flights f, flights_has_passengers fp
+where p.id = fp.passengers_id AND f.id = fp.flights_id AND DATE between ' 2011-01-02' and '2013-12-31' 
+group by p.id
+having count(p.name) > 1)
